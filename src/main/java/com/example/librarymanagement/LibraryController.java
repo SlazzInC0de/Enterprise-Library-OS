@@ -25,14 +25,12 @@ public class LibraryController {
     @FXML private TableColumn<Book, Double> fineCol;
 
     private ObservableList<Book> masterBookList;
-    private final ScheduledExecutorService backgroundDaemon = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService fineProcessingScheduler = Executors.newSingleThreadScheduledExecutor();
 
     @FXML
     public void initialize() {
-        // 1. Wipe old SQLite table and build the fresh one
-        BookDAO.setupFreshDatabase();
+        BookDAO.initializeDatabase();
 
-        // 2. Map table columns
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         titleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
         authorCol.setCellValueFactory(new PropertyValueFactory<>("author"));
@@ -40,77 +38,89 @@ public class LibraryController {
         overdueCol.setCellValueFactory(new PropertyValueFactory<>("daysOverdue"));
         fineCol.setCellValueFactory(new PropertyValueFactory<>("fine"));
 
-        // FIXED: Explicitly declared <Book, Boolean> inside the diamond!
         statusCol.setCellFactory(column -> new TableCell<Book, Boolean>() {
             @Override protected void updateItem(Boolean available, boolean empty) {
                 super.updateItem(available, empty);
                 if (empty || available == null) { setText(null); setStyle(""); }
-                else if (available) { setText("Available"); setStyle("-fx-text-fill: green; -fx-font-weight: bold;"); }
-                else { setText("Checked Out"); setStyle("-fx-text-fill: red; -fx-font-weight: bold;"); }
+                else if (available) { setText("Available"); setStyle("-fx-text-fill: #059669; -fx-font-weight: bold;"); }
+                else { setText("Borrowed"); setStyle("-fx-text-fill: #dc2626; -fx-font-weight: bold;"); }
             }
         });
 
-        // FIXED: Explicitly declared <Book, Double> inside the diamond!
         fineCol.setCellFactory(column -> new TableCell<Book, Double>() {
             @Override protected void updateItem(Double fine, boolean empty) {
                 super.updateItem(fine, empty);
-                if (empty || fine == null || fine == 0) { setText("-"); }
-                else { setText(String.format("₹%.2f", fine)); setStyle("-fx-text-fill: #b91c1c; -fx-font-weight: bold;"); }
+                if (empty || fine == null || fine <= 0) { setText("-"); setStyle(""); }
+                else { setText(String.format("₹%.2f", fine)); setStyle("-fx-text-fill: #991b1b; -fx-font-weight: bold;"); }
             }
         });
 
-        refreshDataModel();
+        loadBooksFromDatabase();
 
-        // Real-Time Search Filter
-        FilteredList<Book> filteredData = new FilteredList<>(masterBookList, b -> true);
+        // Client-side predicate filtering
+        FilteredList<Book> filteredList = new FilteredList<>(masterBookList, b -> true);
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(book -> {
-                if (newValue == null || newValue.isEmpty()) return true;
-                String lowerCaseFilter = newValue.toLowerCase();
-                return book.getTitle().toLowerCase().contains(lowerCaseFilter) ||
-                        book.getAuthor().toLowerCase().contains(lowerCaseFilter);
+            filteredList.setPredicate(book -> {
+                if (newValue == null || newValue.isBlank()) return true;
+                String query = newValue.toLowerCase().trim();
+                return book.getTitle().toLowerCase().contains(query) ||
+                        book.getAuthor().toLowerCase().contains(query);
             });
         });
-        SortedList<Book> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(bookTable.comparatorProperty());
-        bookTable.setItems(sortedData);
 
-        // Background Daemon
-        backgroundDaemon.scheduleAtFixedRate(() -> {
-            BookDAO.executeMidnightAudit();
-            Platform.runLater(this::refreshDataModel);
+        SortedList<Book> sortedList = new SortedList<>(filteredList);
+        sortedList.comparatorProperty().bind(bookTable.comparatorProperty());
+        bookTable.setItems(sortedList);
+
+        // Background worker for simulated daily fine compounding
+        fineProcessingScheduler.scheduleAtFixedRate(() -> {
+            BookDAO.processOverdueFines();
+            Platform.runLater(this::loadBooksFromDatabase);
         }, 10, 10, TimeUnit.SECONDS);
     }
 
-    @FXML protected void handleAddBook() {
-        if (!titleInput.getText().isEmpty() && !authorInput.getText().isEmpty()) {
-            BookDAO.insertBook(titleInput.getText().trim(), authorInput.getText().trim());
-            titleInput.clear(); authorInput.clear();
-            refreshDataModel();
+    @FXML
+    protected void handleAddBook() {
+        String title = titleInput.getText().trim();
+        String author = authorInput.getText().trim();
+
+        if (!title.isEmpty() && !author.isEmpty()) {
+            BookDAO.insertBook(title, author);
+            titleInput.clear();
+            authorInput.clear();
+            loadBooksFromDatabase();
         }
     }
 
-    @FXML protected void handleCheckout() {
+    @FXML
+    protected void handleCheckout() {
         Book selected = bookTable.getSelectionModel().getSelectedItem();
         if (selected != null && selected.isAvailable()) {
-            BookDAO.updateBookStatus(selected.getId(), false);
-            refreshDataModel();
+            BookDAO.updateBookAvailability(selected.getId(), false);
+            loadBooksFromDatabase();
         }
     }
 
-    @FXML protected void handleReturn() {
+    @FXML
+    protected void handleReturn() {
         Book selected = bookTable.getSelectionModel().getSelectedItem();
         if (selected != null && !selected.isAvailable()) {
-            BookDAO.updateBookStatus(selected.getId(), true);
-            refreshDataModel();
+            BookDAO.updateBookAvailability(selected.getId(), true);
+            loadBooksFromDatabase();
         }
     }
 
-    private void refreshDataModel() {
-        if (masterBookList == null) { masterBookList = BookDAO.getAllBooks(); }
-        else { masterBookList.setAll(BookDAO.getAllBooks()); }
+    private void loadBooksFromDatabase() {
+        if (masterBookList == null) {
+            masterBookList = BookDAO.getAllBooks();
+        } else {
+            masterBookList.setAll(BookDAO.getAllBooks());
+        }
     }
 
-    // Safely kills the background thread when the user hits the red 'X' on the window
-    public void shutdown() { backgroundDaemon.shutdown(); }
+    public void shutdownScheduler() {
+        if (!fineProcessingScheduler.isShutdown()) {
+            fineProcessingScheduler.shutdown();
+        }
+    }
 }

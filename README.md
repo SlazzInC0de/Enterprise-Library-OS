@@ -1,23 +1,23 @@
-# Enterprise Library OS (JavaFX / SQLite)
+# Local Library Management System (JavaFX)
 
-An asynchronous, concurrency-safe Library Management Operating System built with modern Java 17. Designed to demonstrate strict separation of concerns, multi-threaded background task processing, and zero-latency UI data filtering.
+A lightweight desktop application built to manage library inventory, handle patron checkouts, and compute compounding overdue penalties. Built with pure Java 17 and decoupled FXML markup.
 
-## ⚡ System Architecture Highlights
+## Features
 
-* **The Asynchronous Audit Daemon:** Utilizes a detached `ScheduledExecutorService` running on a secondary worker thread to conduct periodic background sweeps of the ledger, automatically compounding patron late penalties without locking the JavaFX Application Thread.
-* **Zero-Latency Predicate Engine:** Implements an in-memory `FilteredList` bound to a JavaFX `TableView`, allowing real-time multi-parameter search indexing (Author/Title) at `0.00ms` cost to the SQL database.
-* **Strict MVC & DAO Design:** Complete decoupling of the persistence layer (`BookDAO`) from the visual markup (`.fxml`) and the event controller.
-* **Module-Path Bypass Launcher:** Employs a custom pre-main bootstrapper (`Launcher.java`) to dynamically initialize the JavaFX Toolkit at runtime, circumventing the rigid encapsulation of the post-Java 11 module system.
+* **In-Memory Predicate Filtering:** Uses JavaFX `FilteredList` to allow instant, zero-re-query searching across book titles and authors.
+* **Background Task Scheduler:** A detached `ScheduledExecutorService` runs periodic sweeps of the SQLite DB to process overdue fines asynchronously without freezing the UI thread.
+* **Embedded SQLite Persistence:** Zero-configuration database; automatically generates local schema on initial boot.
+* **Thread-Safe Controller:** Safely marshals background database updates back onto the JavaFX Application Thread via `Platform.runLater()`.
 
-## 🛠️ Technical Stack
+## Tech Stack
 
-* **Language:** Java 17 (LTS)
-* **GUI Framework:** JavaFX 21 (FXML + Scene Builder)
-* **Embedded Database:** SQLite (xerial JDBC driver)
-* **Build System:** Apache Maven
+* **Runtime:** Java 17 LTS
+* **UI:** JavaFX 21 (Scene Builder FXML)
+* **Storage:** SQLite JDBC (`org.xerial:sqlite-jdbc`)
+* **Testing:** JUnit 5 Jupiter
 
-## 🚀 Quick Start (Local Deployment)
+## Running Locally
 
-1. Clone the repository:
+1. Clone repo:
    ```bash
    git clone [https://github.com/SlazzInC0de/Library-Management-System.git](https://github.com/SlazzInC0de/Library-Management-System.git)
