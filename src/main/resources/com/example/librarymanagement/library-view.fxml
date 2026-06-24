@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="12.0" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.librarymanagement.LibraryController" style="-fx-background-color: #f4f6f9;">
+    <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/></padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label text="Enterprise OS: System Library" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="auditLabel" text="Daemon: Active (10s cycle)" style="-fx-text-fill: #10b981; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <TextField fx:id="searchField" promptText="🔍 Instant Filter by Title or Author..." style="-fx-font-size: 14px; -fx-padding: 8px; -fx-border-radius: 5px;"/>
+
+    <HBox spacing="10.0">
+        <TextField fx:id="titleInput" promptText="New Book Title" HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="authorInput" promptText="Author Name" HBox.hgrow="ALWAYS"/>
+        <Button text="+ Intake Book" onAction="#handleAddBook" style="-fx-background-color: #0f172a; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
+    </HBox>
+
+    <TableView fx:id="bookTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idCol" text="ID" prefWidth="40"/>
+            <TableColumn fx:id="titleCol" text="Title" prefWidth="240"/>
+            <TableColumn fx:id="authorCol" text="Author" prefWidth="160"/>
+            <TableColumn fx:id="statusCol" text="Status" prefWidth="90"/>
+            <TableColumn fx:id="overdueCol" text="Overdue (Days)" prefWidth="100"/>
+            <TableColumn fx:id="fineCol" text="Ledger Fine" prefWidth="90"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="15.0" alignment="CENTER_RIGHT">
+        <Button text="Patron Returns Book" onAction="#handleReturn" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold;"/>
+        <Button text="Patron Checks Out" onAction="#handleCheckout" style="-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+</VBox>
