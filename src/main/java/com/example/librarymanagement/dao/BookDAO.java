@@ -24,21 +24,27 @@ public class BookDAO {
         try (Connection conn = DriverManager.getConnection(url());
              Statement stmt = conn.createStatement()) {
             stmt.execute(createTableSql);
-            seedInitialDataIfEmpty(conn);
         } catch (SQLException e) {
             throw new RuntimeException("Critical database initialization failure", e);
+        }
+        try (Connection conn = DriverManager.getConnection(url())) {
+            seedInitialDataIfEmpty(conn);
+        } catch (SQLException e) {
+            throw new RuntimeException("Seeding starter catalog failed", e);
         }
     }
 
     private static void seedInitialDataIfEmpty(Connection conn) throws SQLException {
-        String countSql = "SELECT COUNT(*) AS count FROM books";
+        int count;
+        // Close the read cursor before writing: SQLite cannot commit while it is open.
         try (Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(countSql)) {
-            if (rs.next() && rs.getInt("count") == 0) {
-                insertBook("The Pragmatic Programmer", "David Thomas");
-                insertBook("Clean Architecture", "Robert C. Martin");
-                insertBook("Designing Data-Intensive Applications", "Martin Kleppmann");
-            }
+             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS count FROM books")) {
+            count = rs.next() ? rs.getInt("count") : 0;
+        }
+        if (count == 0) {
+            insertBook("The Pragmatic Programmer", "David Thomas");
+            insertBook("Clean Architecture", "Robert C. Martin");
+            insertBook("Designing Data-Intensive Applications", "Martin Kleppmann");
         }
     }
 
