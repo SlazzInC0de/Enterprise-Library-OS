@@ -6,7 +6,10 @@ import javafx.collections.ObservableList;
 import java.sql.*;
 
 public class BookDAO {
-    private static final String URL = "jdbc:sqlite:library.db";
+    /** Override with -Dlibrary.db.url=jdbc:sqlite:/path/to/file.db (tests use a temp file). */
+    private static String url() {
+        return System.getProperty("library.db.url", "jdbc:sqlite:library.db");
+    }
 
     public static void initializeDatabase() {
         String createTableSql = "CREATE TABLE IF NOT EXISTS books ("
@@ -18,7 +21,7 @@ public class BookDAO {
                 + "fine REAL DEFAULT 0.0"
                 + ");";
 
-        try (Connection conn = DriverManager.getConnection(URL);
+        try (Connection conn = DriverManager.getConnection(url());
              Statement stmt = conn.createStatement()) {
             stmt.execute(createTableSql);
             seedInitialDataIfEmpty(conn);
@@ -41,7 +44,7 @@ public class BookDAO {
 
     public static void insertBook(String title, String author) {
         String sql = "INSERT INTO books (title, author, is_available, days_overdue, fine) VALUES (?, ?, 1, 0, 0.0)";
-        try (Connection conn = DriverManager.getConnection(URL);
+        try (Connection conn = DriverManager.getConnection(url());
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, title);
             pstmt.setString(2, author);
@@ -53,7 +56,7 @@ public class BookDAO {
 
     public static void processOverdueFines() {
         String sql = "UPDATE books SET days_overdue = days_overdue + 1, fine = fine + 15.0 WHERE is_available = 0";
-        try (Connection conn = DriverManager.getConnection(URL);
+        try (Connection conn = DriverManager.getConnection(url());
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
         } catch (SQLException e) {
@@ -63,7 +66,7 @@ public class BookDAO {
 
     public static void updateBookAvailability(int bookId, boolean isAvailable) {
         String sql = "UPDATE books SET is_available = ?, days_overdue = 0, fine = 0.0 WHERE id = ?";
-        try (Connection conn = DriverManager.getConnection(URL);
+        try (Connection conn = DriverManager.getConnection(url());
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setBoolean(1, isAvailable);
             pstmt.setInt(2, bookId);
@@ -76,7 +79,7 @@ public class BookDAO {
     public static ObservableList<Book> getAllBooks() {
         ObservableList<Book> books = FXCollections.observableArrayList();
         String sql = "SELECT * FROM books";
-        try (Connection conn = DriverManager.getConnection(URL);
+        try (Connection conn = DriverManager.getConnection(url());
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
