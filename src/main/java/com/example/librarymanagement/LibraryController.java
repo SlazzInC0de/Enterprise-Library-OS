@@ -50,7 +50,8 @@ public class LibraryController {
         fineCol.setCellFactory(column -> new TableCell<Book, Double>() {
             @Override protected void updateItem(Double fine, boolean empty) {
                 super.updateItem(fine, empty);
-                if (empty || fine == null || fine <= 0) { setText("-"); setStyle(""); }
+                if (empty || fine == null) { setText(null); setStyle(""); }
+                else if (fine <= 0) { setText("-"); setStyle(""); }
                 else { setText(String.format("₹%.2f", fine)); setStyle("-fx-text-fill: #991b1b; -fx-font-weight: bold;"); }
             }
         });
