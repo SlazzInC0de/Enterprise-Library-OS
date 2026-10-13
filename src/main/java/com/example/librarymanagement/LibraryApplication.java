@@ -10,7 +10,7 @@ public class LibraryApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(LibraryApplication.class.getResource("/com/example/librarymanagement/library-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 620, 440);
+        Scene scene = new Scene(fxmlLoader.load(), 900, 560);
 
         stage.setTitle("Alexandria OS - System Manager");
         stage.setScene(scene);

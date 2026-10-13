@@ -21,7 +21,7 @@ jobs:
       - run: mvn -B -ntp -q -DskipTests compile
       - name: Launch app and capture
         run: |
-          Xvfb :99 -screen 0 1100x700x24 & sleep 2
+          Xvfb :99 -screen 0 1280x800x24 & sleep 2
           export DISPLAY=:99
           (mvn -B -ntp -q javafx:run > app.log 2>&1 &)
           sleep 40

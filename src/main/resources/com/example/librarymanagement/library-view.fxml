@@ -23,11 +23,11 @@
     <TableView fx:id="bookTable" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="idCol" text="ID" prefWidth="40"/>
-            <TableColumn fx:id="titleCol" text="Title" prefWidth="240"/>
-            <TableColumn fx:id="authorCol" text="Author" prefWidth="160"/>
+            <TableColumn fx:id="titleCol" text="Title" prefWidth="300"/>
+            <TableColumn fx:id="authorCol" text="Author" prefWidth="180"/>
             <TableColumn fx:id="statusCol" text="Status" prefWidth="90"/>
-            <TableColumn fx:id="overdueCol" text="Overdue (Days)" prefWidth="100"/>
-            <TableColumn fx:id="fineCol" text="Ledger Fine" prefWidth="90"/>
+            <TableColumn fx:id="overdueCol" text="Overdue (Days)" prefWidth="110"/>
+            <TableColumn fx:id="fineCol" text="Ledger Fine" prefWidth="110"/>
         </columns>
     </TableView>
 
