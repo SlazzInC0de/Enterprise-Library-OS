@@ -104,4 +104,19 @@ class BookDAOTest {
         List<Book> books = BookDAO.getAllBooks();
         assertEquals(books.size(), books.stream().map(Book::getId).distinct().count());
     }
+
+    @Test
+    void unreachableDatabaseFailsFastOnStartup() {
+        System.setProperty("library.db.url", "jdbc:sqlite:" + tempDir.resolve("missing-dir").resolve("x.db"));
+        assertThrows(RuntimeException.class, BookDAO::initializeDatabase);
+    }
+
+    @Test
+    void readsFromUnreachableDatabaseReturnEmptyInsteadOfCrashing() {
+        System.setProperty("library.db.url", "jdbc:sqlite:" + tempDir.resolve("missing-dir").resolve("x.db"));
+        assertTrue(BookDAO.getAllBooks().isEmpty());
+        assertDoesNotThrow(() -> BookDAO.insertBook("t", "a"));
+        assertDoesNotThrow(BookDAO::processOverdueFines);
+        assertDoesNotThrow(() -> BookDAO.updateBookAvailability(1, false));
+    }
 }

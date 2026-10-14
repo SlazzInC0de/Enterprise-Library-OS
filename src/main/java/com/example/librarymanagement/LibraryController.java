@@ -2,6 +2,7 @@ package com.example.librarymanagement;
 
 import com.example.librarymanagement.dao.BookDAO;
 import com.example.librarymanagement.model.Book;
+import com.example.librarymanagement.model.BookSearch;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -61,12 +62,7 @@ public class LibraryController {
         // Client-side predicate filtering
         FilteredList<Book> filteredList = new FilteredList<>(masterBookList, b -> true);
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredList.setPredicate(book -> {
-                if (newValue == null || newValue.isBlank()) return true;
-                String query = newValue.toLowerCase().trim();
-                return book.getTitle().toLowerCase().contains(query) ||
-                        book.getAuthor().toLowerCase().contains(query);
-            });
+            filteredList.setPredicate(book -> BookSearch.matches(book, newValue));
         });
 
         SortedList<Book> sortedList = new SortedList<>(filteredList);
