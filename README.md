@@ -12,6 +12,7 @@ Catalog books, check them in and out, and let a background daemon accrue overdue
 ![SQLite](https://img.shields.io/badge/SQLite-0f172a?logo=sqlite&logoColor=4FA3D1)
 ![JUnit](https://img.shields.io/badge/JUnit_5-0f172a?logo=junit5&logoColor=25A162)
 ![Maven](https://img.shields.io/badge/Maven-0f172a?logo=apachemaven&logoColor=C71A36)
+![Coverage](https://img.shields.io/badge/data_layer_coverage-96%25-22c55e)
 ![License](https://img.shields.io/badge/License-MIT-22d3ee)
 
 <img src="docs/app.png" alt="Enterprise Library OS main window" width="85%"/>
@@ -49,17 +50,37 @@ flowchart LR
 
 ## 🧪 Tests
 
-JUnit 5 covers the DAO against a throwaway SQLite file per test (the real `library.db` is never touched):
+17 JUnit 5 tests run on every push, each against a throwaway SQLite file (the real `library.db` is never touched):
 
-- seeding runs exactly once
-- insert, checkout and return flows
+- seeding runs exactly once, and insert, checkout and return work end to end
 - the overdue sweep charges only borrowed books and resets on return
+- an unreachable database fails fast at startup, while later reads degrade to an empty list instead of crashing the UI
+- search matches title or author, ignores case and surrounding spaces, and handles missing fields
+
+**Coverage (JaCoCo, published in each CI run):**
+
+| Layer | Line | Branch |
+|---|---:|---:|
+| `dao.BookDAO` | 96% | 83% |
+| `model.Book`, `model.BookSearch` | 100% | 100% |
+| JavaFX UI (`LibraryController`, `LibraryApplication`) | 0% | 0% |
+
+The UI layer is thin glue around tested logic; search filtering was moved out of the controller into `BookSearch` specifically so it could be tested without a running JavaFX toolkit.
 
 ```bash
-./mvnw test
+./mvnw verify      # tests + JaCoCo report in target/site/jacoco/
 ```
 
-CI runs `mvn verify` on every push.
+## 🧭 Design decisions
+
+| Decision | Why | Trade-off / alternative |
+|---|---|---|
+| **SQLite, one connection per operation** | Zero setup for a single-user desktop app; short connections avoid long-held locks | No pooling; a server database would be needed for many concurrent users |
+| **Read cursor closed before seeding** | SQLite cannot commit a write while a read cursor is open on the same file; seeding used to fail silently | Two round trips at startup |
+| **Fine daemon on its own thread** | The UI never freezes during the sweep; results return via `Platform.runLater` | A 10-second "day" is a simulation; real due dates would replace it |
+| **In-memory filtering** with `FilteredList` | Instant search on every keystroke, no query per key | Holds the whole catalog in memory; fine for thousands of titles, not millions |
+| **Static DAO** | Simple for a small app | Harder to swap implementations; an interface plus injection would make the UI testable with fakes |
+| **DB path from a system property** | Tests and users can point at any file without code changes | Not yet exposed in a settings screen |
 
 ## 🚀 Run locally
 
@@ -86,9 +107,9 @@ src/
 │   ├── Launcher.java             # plain main() for fat-JAR launches
 │   ├── LibraryController.java    # UI logic, filtering, fine daemon
 │   ├── dao/BookDAO.java          # SQLite access
-│   └── model/Book.java
+│   └── model/                    # Book, BookSearch
 ├── main/resources/.../library-view.fxml
-└── test/java/.../dao/BookDAOTest.java
+└── test/java/.../               # BookDAOTest, BookSearchTest
 ```
 
 ## 🗺️ Roadmap
