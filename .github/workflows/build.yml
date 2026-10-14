@@ -17,8 +17,22 @@ jobs:
           cache: maven
       - name: Build and test
         run: mvn -B -ntp verify
-      - name: Report failures as annotations
-        if: failure()
+      - name: Coverage summary
+        if: success()
         run: |
-          grep -rhoE "(Tests run:.*|\[ERROR\].{0,300})" target/surefire-reports/*.txt 2>/dev/null | head -20 | while read -r l; do echo "::error::$l"; done
-          mvn -B -ntp -q verify 2>&1 | grep -E "\[ERROR\]" | head -20 | while read -r l; do echo "::error::$l"; done
+          python3 - <<'PY' | tee coverage.md
+          import csv
+          rows = list(csv.DictReader(open("target/site/jacoco/jacoco.csv")))
+          print("| Class | Line coverage | Branch coverage |")
+          print("|---|---:|---:|")
+          tl = tm = bl = bm = 0
+          for r in rows:
+              lc, lm = int(r["LINE_COVERED"]), int(r["LINE_MISSED"])
+              bc, bmiss = int(r["BRANCH_COVERED"]), int(r["BRANCH_MISSED"])
+              tl += lc; tm += lm; bl += bc; bm += bmiss
+              pct = lambda c, m: f"{100 * c / (c + m):.0f}%" if c + m else "n/a"
+              print(f"| {r['PACKAGE']}.{r['CLASS']} | {pct(lc, lm)} | {pct(bc, bmiss)} |")
+          print(f"| **Total** | **{100 * tl / (tl + tm):.0f}%** | **{100 * bl / (bl + bm):.0f}%** |")
+          PY
+          cat coverage.md >> "$GITHUB_STEP_SUMMARY"
+          while read -r line; do echo "::notice title=coverage::$line"; done < coverage.md
