@@ -50,7 +50,7 @@ flowchart LR
 
 ## 🧪 Tests
 
-17 JUnit 5 tests run on every push, each against a throwaway SQLite file (the real `library.db` is never touched):
+19 JUnit 5 tests (9 DAO, 10 search) run on every push, each against a throwaway SQLite file (the real `library.db` is never touched):
 
 - seeding runs exactly once, and insert, checkout and return work end to end
 - the overdue sweep charges only borrowed books and resets on return
