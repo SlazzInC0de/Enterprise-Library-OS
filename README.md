@@ -21,6 +21,10 @@ Catalog books, check them in and out, and let a background daemon accrue overdue
 
 ---
 
+**Contents:** [Features](#-features) · [Architecture](#️-architecture) · [Tests](#-tests) · [Design decisions](#-design-decisions) · [Run locally](#-run-locally) · [Project structure](#-project-structure) · [Roadmap](#️-roadmap) · [Security and privacy](#-security-and-privacy) · [License](#-license)
+
+---
+
 ## ✨ Features
 
 - 📚 **Book intake**: add titles and authors straight into the catalog
@@ -118,6 +122,12 @@ src/
 - [ ] Due dates in real time instead of a simulated day
 - [ ] Export the ledger to CSV
 - [ ] Packaged installers with `jpackage`
+
+## 🔒 Security and privacy
+
+- Everything stays on your machine: no accounts, no network calls, just a local `library.db` file.
+- Every write uses `PreparedStatement`, so book titles and authors cannot inject SQL.
+- Found a vulnerability? Please report it privately as described in [SECURITY.md](SECURITY.md).
 
 ## 📄 License
 
