@@ -4,8 +4,12 @@ import com.example.librarymanagement.model.Book;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BookDAO {
+    private static final Logger LOG = Logger.getLogger(BookDAO.class.getName());
+
     /** Override with -Dlibrary.db.url=jdbc:sqlite:/path/to/file.db (tests use a temp file). */
     private static String url() {
         return System.getProperty("library.db.url", "jdbc:sqlite:library.db");
@@ -56,7 +60,7 @@ public class BookDAO {
             pstmt.setString(2, author);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, "Could not insert book: " + title, e);
         }
     }
 
@@ -66,7 +70,7 @@ public class BookDAO {
              Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(sql);
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, "Could not update overdue fines", e);
         }
     }
 
@@ -78,7 +82,7 @@ public class BookDAO {
             pstmt.setInt(2, bookId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, "Could not update availability of book " + bookId, e);
         }
     }
 
@@ -99,7 +103,7 @@ public class BookDAO {
                 ));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.log(Level.SEVERE, "Could not load books", e);
         }
         return books;
     }
